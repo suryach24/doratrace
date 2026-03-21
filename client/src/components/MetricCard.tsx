@@ -1,5 +1,5 @@
 import './MetricCard.css';
-import { MetricResult } from '../types/dora';
+import type { MetricResult } from '../types/dora';
 
 interface Props {
   metric: MetricResult;

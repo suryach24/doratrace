@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { MetricCard } from '../components/MetricCard';
-import { MetricResult } from '../types/dora';
+import type { MetricResult } from '../types/dora';
 
 const eliteMetric: MetricResult = { value: 4.2, unit: 'deploys/week', tier: 'elite', dataPoints: 38 };
 

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { DoraMetrics } from '../types/dora';
+import type { DoraMetrics } from '../types/dora';
 
 export type MetricsStatus = 'idle' | 'loading' | 'success' | 'error';
 
