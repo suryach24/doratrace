@@ -1,0 +1,53 @@
+name: Build & Deploy doratrace
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install root deps
+        run: npm install
+
+      - name: Install & build client
+        run: cd client && npm install && npm run build
+
+      - name: Install & build server
+        run: cd server && npm install && npm run build
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 65002 -H ${{ secrets.FTP_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 65002" \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='client/src' \
+            --exclude='server/src' \
+            ./ \
+            ${{ secrets.FTP_USERNAME }}@${{ secrets.FTP_HOST }}:public_html/doratrace/
+
+      - name: Install production deps + restart Node app
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 65002 \
+            ${{ secrets.FTP_USERNAME }}@${{ secrets.FTP_HOST }} << 'ENDSSH'
+          cd ~/public_html/doratrace/server && npm install --production
+          mkdir -p tmp && touch tmp/restart.txt
+          ENDSSH
