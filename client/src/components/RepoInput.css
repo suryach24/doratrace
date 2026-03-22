@@ -5,15 +5,54 @@
 .repo-input-prompt { font-family: var(--font-mono); color: var(--text-terminal); font-size: 0.7rem; margin-bottom: 6px; letter-spacing: 0.05rem; }
 .repo-input-title { color: var(--text-primary); font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
 .repo-input-subtitle { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 20px; }
-.repo-input-form { display: flex; gap: 8px; max-width: 520px; flex-wrap: wrap; }
+.repo-input-form { display: flex; gap: 8px; max-width: 640px; flex-wrap: wrap; }
+
+/* Field wrapper holds the provider badge + input together */
+.repo-input-field-wrap {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.provider-badge {
+  position: absolute;
+  left: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04rem;
+  padding: 2px 7px;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.provider-badge.github {
+  background: rgba(0, 255, 135, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 135, 0.3);
+}
+
+.provider-badge.ado {
+  background: rgba(0, 120, 212, 0.12);
+  color: #4fa8e8;
+  border: 1px solid rgba(0, 120, 212, 0.35);
+}
+
 .repo-input-field {
-  flex: 1; min-width: 200px;
+  width: 100%;
+  min-width: 0;
   background: var(--surface); border: 1px solid var(--border-bright); border-radius: var(--radius-sm);
   padding: 9px 14px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-secondary);
   outline: none; transition: border-color 0.2s;
 }
 .repo-input-field:focus { border-color: var(--green); }
 .repo-input-field::placeholder { color: var(--text-muted); }
+/* Shift text right when provider badge is showing */
+.repo-input-field.has-badge { padding-left: 96px; }
 .analyse-btn {
   background: linear-gradient(135deg, var(--green-mid), var(--green));
   color: var(--base); border: none; border-radius: var(--radius-sm);
