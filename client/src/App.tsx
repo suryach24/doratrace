@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useMetrics } from './hooks/useMetrics';
 import { RepoInput } from './components/RepoInput';
 import { StatusBar } from './components/StatusBar';
@@ -16,8 +17,17 @@ const METRICS_CONFIG = [
 function App() {
   const { data, status, error, fetch } = useMetrics();
 
+  // Persist theme in localStorage
+  const [isLight, setIsLight] = useState<boolean>(() => {
+    return localStorage.getItem('doratrace-theme') === 'light';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('doratrace-theme', isLight ? 'light' : 'dark');
+  }, [isLight]);
+
   return (
-    <div className="app">
+    <div className={`app${isLight ? ' light' : ''}`}>
       <nav className="navbar">
         <a href="/" className="navbar-logo">
           <span className="logo-dora">dora</span>
@@ -25,6 +35,13 @@ function App() {
         </a>
         <div className="navbar-meta">
           <span className="navbar-version">v1.0.0</span>
+          <button
+            className="theme-toggle"
+            onClick={() => setIsLight(v => !v)}
+            aria-label="Toggle theme"
+          >
+            {isLight ? '🌙 Dark' : '☀ Light'}
+          </button>
           <a href="https://github.com/suryach24/doratrace" target="_blank" rel="noopener noreferrer" className="navbar-github">
             GitHub ↗
           </a>

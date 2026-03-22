@@ -1,6 +1,8 @@
 /* ==========================================
    doratrace — Terminal Premium Design System
    ========================================== */
+
+/* Dark mode (default) */
 :root {
   --base: #060a0d;
   --surface: #080d11;
@@ -26,6 +28,75 @@
 
   --radius: 8px;
   --radius-sm: 4px;
+}
+
+/* Light mode overrides */
+.light {
+  --base: #f0f4f8;
+  --surface: #ffffff;
+  --border: #d0dde8;
+  --border-bright: #a8bfd0;
+
+  --green: #00a85a;
+  --green-mid: #008f4c;
+  --cyan: #0078d4;
+  --cyan-mid: #005fa3;
+  --purple: #7c00cc;
+  --purple-mid: #5c00a0;
+  --amber: #b87800;
+  --amber-mid: #a06600;
+
+  --text-primary: #0d1f2d;
+  --text-secondary: #1e3a50;
+  --text-muted: #3a6070;
+  --text-terminal: #4a6a80;
+}
+
+/* Light mode: navbar and surface overrides */
+.light body,
+.light .app {
+  background: var(--base);
+  color: var(--text-primary);
+}
+
+.light .navbar {
+  background: #ffffff;
+  border-bottom-color: var(--border);
+}
+
+.light .navbar-logo .logo-dora  { color: var(--green); }
+.light .navbar-logo .logo-trace { color: var(--text-primary); }
+.light .navbar-github { color: var(--green); border-color: rgba(0,168,90,0.4); }
+.light .navbar-github:hover { background: rgba(0,168,90,0.08); }
+
+.light .repo-input-section { border-bottom-color: var(--border); }
+.light .repo-input-field {
+  background: #f8fafc;
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.light .repo-input-field:focus { border-color: var(--green); }
+.light .repo-input-field::placeholder { color: var(--text-muted); }
+
+.light .status-bar { background: #f0f4f8; }
+
+/* Theme toggle button */
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.theme-toggle:hover {
+  border-color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 *, *::before, *::after {
