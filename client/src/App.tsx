@@ -17,17 +17,25 @@ const METRICS_CONFIG = [
 function App() {
   const { data, status, error, fetch } = useMetrics();
 
-  // Persist theme in localStorage
+  // Persist theme in localStorage; sync html class immediately on init
   const [isLight, setIsLight] = useState<boolean>(() => {
-    return localStorage.getItem('doratrace-theme') === 'light';
+    const saved = localStorage.getItem('doratrace-theme') === 'light';
+    if (saved) document.documentElement.classList.add('light');
+    return saved;
   });
 
   useEffect(() => {
     localStorage.setItem('doratrace-theme', isLight ? 'light' : 'dark');
+    // Apply to <html> so body + all elements inherit the variables
+    if (isLight) {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
   }, [isLight]);
 
   return (
-    <div className={`app${isLight ? ' light' : ''}`}>
+    <div className="app">
       <nav className="navbar">
         <a href="/" className="navbar-logo">
           <span className="logo-dora">dora</span>

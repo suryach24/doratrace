@@ -30,55 +30,144 @@
   --radius-sm: 4px;
 }
 
-/* Light mode overrides */
+/* ==========================================
+   Light mode — applied to <html> element
+   so body + all descendants inherit vars
+   ========================================== */
 .light {
   --base: #f0f4f8;
   --surface: #ffffff;
-  --border: #d0dde8;
-  --border-bright: #a8bfd0;
+  --border: #cddae6;
+  --border-bright: #a8bfcf;
 
-  --green: #00a85a;
-  --green-mid: #008f4c;
-  --cyan: #0078d4;
-  --cyan-mid: #005fa3;
-  --purple: #7c00cc;
-  --purple-mid: #5c00a0;
-  --amber: #b87800;
-  --amber-mid: #a06600;
+  --green: #008f4c;
+  --green-mid: #007040;
+  --cyan: #0068c0;
+  --cyan-mid: #004fa0;
+  --purple: #6a00b8;
+  --purple-mid: #520090;
+  --amber: #a06000;
+  --amber-mid: #885000;
 
-  --text-primary: #0d1f2d;
-  --text-secondary: #1e3a50;
-  --text-muted: #3a6070;
-  --text-terminal: #4a6a80;
+  --text-primary: #0a1929;
+  --text-secondary: #1a3a52;
+  --text-muted: #2e5470;
+  --text-terminal: #3a6880;
 }
 
-/* Light mode: navbar and surface overrides */
-.light body,
-.light .app {
+/* Body and root background */
+.light body {
   background: var(--base);
   color: var(--text-primary);
 }
 
+/* Navbar */
 .light .navbar {
-  background: #ffffff;
+  background: var(--surface);
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.light .navbar-version { color: var(--text-muted); }
+.light .navbar-github {
+  color: var(--green);
+  border-color: rgba(0,143,76,0.35);
+}
+.light .navbar-github:hover { background: rgba(0,143,76,0.08); }
+
+/* Repo input section */
+.light .repo-input-section {
+  background: var(--base);
   border-bottom-color: var(--border);
 }
-
-.light .navbar-logo .logo-dora  { color: var(--green); }
-.light .navbar-logo .logo-trace { color: var(--text-primary); }
-.light .navbar-github { color: var(--green); border-color: rgba(0,168,90,0.4); }
-.light .navbar-github:hover { background: rgba(0,168,90,0.08); }
-
-.light .repo-input-section { border-bottom-color: var(--border); }
+.light .repo-input-prompt { color: var(--text-terminal); }
+.light .repo-input-title { color: var(--text-primary); }
+.light .repo-input-subtitle { color: var(--text-muted); }
 .light .repo-input-field {
-  background: #f8fafc;
+  background: var(--surface);
   border-color: var(--border);
   color: var(--text-primary);
 }
 .light .repo-input-field:focus { border-color: var(--green); }
 .light .repo-input-field::placeholder { color: var(--text-muted); }
+.light .days-tab {
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: var(--surface);
+}
+.light .days-tab:hover { border-color: var(--border-bright); color: var(--text-secondary); }
+.light .days-tab.active {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(0,143,76,0.07);
+}
 
-.light .status-bar { background: #f0f4f8; }
+/* Metric cards */
+.light .metric-card {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.light .metric-card:hover { border-color: var(--border-bright); box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
+.light .metric-card-label { color: var(--text-muted); }
+.light .metric-card-value { color: var(--text-primary); }
+.light .metric-card-unit { color: var(--text-muted); }
+.light .metric-card-datapoints { color: var(--text-terminal); }
+
+/* Tier badges in light mode — keep vivid but darken slightly */
+.light .tier-badge.elite  { background: rgba(0,143,76,0.1); }
+.light .tier-badge.high   { background: rgba(0,104,192,0.1); }
+.light .tier-badge.medium { background: rgba(160,96,0,0.1); }
+.light .tier-badge.low    { background: rgba(200,0,0,0.08); }
+.light .tier-badge.na     { color: var(--text-muted); border-color: var(--border); }
+
+/* Timeline */
+.light .timeline {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.light .timeline-label { color: var(--text-muted); }
+.light .timeline-count { color: var(--text-terminal); }
+.light .timeline-bar.empty { background: var(--border); }
+.light .timeline-date { color: var(--text-terminal); }
+.light .timeline-tooltip-popup {
+  background: var(--surface);
+  border-color: var(--border-bright);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.light .ttp-date { color: var(--text-secondary); border-bottom-color: var(--border); }
+.light .ttp-label { color: var(--text-muted); }
+.light .ttp-incident { color: var(--amber); border-top-color: var(--border); }
+
+/* Methodology note */
+.light .methodology { border-color: var(--border); }
+.light .methodology-toggle {
+  background: var(--surface);
+  color: var(--text-muted);
+}
+.light .methodology-toggle:hover { background: #edf2f7; }
+.light .methodology-toggle-label { color: var(--text-muted); }
+.light .methodology-arrow { color: var(--text-muted); }
+.light .methodology-body {
+  background: #f7fafc;
+  border-top-color: var(--border);
+}
+.light .methodology-body p { color: var(--text-secondary); }
+.light .methodology-body strong { color: var(--text-primary); }
+.light .methodology-disclaimer { color: var(--text-terminal); border-top-color: var(--border); }
+
+/* Error banner */
+.light .error-banner {
+  background: rgba(200,0,0,0.06);
+  border-color: rgba(200,0,0,0.25);
+  color: #c00000;
+}
+
+/* Theme toggle */
+.light .theme-toggle {
+  border-color: var(--border-bright);
+  color: var(--text-muted);
+}
+.light .theme-toggle:hover { color: var(--text-secondary); }
 
 /* Theme toggle button */
 .theme-toggle {
@@ -135,7 +224,7 @@ body {
 
 /* Navbar */
 .navbar {
-  background: #080d11;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: 10px 24px;
   display: flex;
