@@ -76,6 +76,18 @@ export async function fetchMergedPRs(repo: string, days: number): Promise<PullRe
     }));
 }
 
+export interface BranchCommit {
+  date: string; // ISO string
+}
+
+export async function fetchDefaultBranchCommits(repo: string, days: number): Promise<BranchCommit[]> {
+  const since = sinceISO(days);
+  const data: any[] = await githubFetch(
+    `${BASE_URL}/repos/${repo}/commits?since=${since}&per_page=100`
+  );
+  return data.map(c => ({ date: c.commit.author.date }));
+}
+
 export async function fetchCommitsForPR(repo: string, prNumber: number): Promise<Commit[]> {
   return githubFetch(
     `${BASE_URL}/repos/${repo}/pulls/${prNumber}/commits?per_page=100`

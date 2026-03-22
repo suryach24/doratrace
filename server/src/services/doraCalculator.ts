@@ -1,5 +1,5 @@
 import { MetricResult, PerformanceTier, DeployEvent } from '../types/dora';
-import { Release, PullRequest, Issue, Commit } from './githubService';
+import { Release, PullRequest, Issue, Commit, BranchCommit } from './githubService';
 
 type CommitFetcher = (prNumber: number) => Promise<Commit[]>;
 
@@ -32,10 +32,11 @@ function tierFailRate(pct: number): PerformanceTier {
 }
 
 // --- Deploy Frequency ---
-// Uses Releases when available; falls back to merged PRs (most repos don't publish formal releases)
+// Priority: Releases → Merged PRs → Direct commits (most common for personal projects)
 export function calcDeployFrequency(
   releases: Release[],
   prs: PullRequest[],
+  commits: BranchCommit[],
   days: number
 ): MetricResult {
   if (releases.length > 0) {
@@ -48,16 +49,26 @@ export function calcDeployFrequency(
     };
   }
 
-  // Fallback: merged PRs as deployment proxy
-  if (prs.length === 0) {
-    return { value: 0, unit: 'deploys/week', tier: 'low', dataPoints: 0 };
+  if (prs.length > 0) {
+    const perWeek = (prs.length / days) * 7;
+    return {
+      value: Math.round(perWeek * 10) / 10,
+      unit: 'PRs/week',
+      tier: tierDeployFreq(perWeek),
+      dataPoints: prs.length,
+    };
   }
-  const perWeek = (prs.length / days) * 7;
+
+  // Last resort: commits to default branch
+  if (commits.length === 0) {
+    return { value: 0, unit: 'commits/week', tier: 'low', dataPoints: 0 };
+  }
+  const perWeek = (commits.length / days) * 7;
   return {
     value: Math.round(perWeek * 10) / 10,
-    unit: 'PRs/week',   // label makes it clear this is a proxy
+    unit: 'commits/week',
     tier: tierDeployFreq(perWeek),
-    dataPoints: prs.length,
+    dataPoints: commits.length,
   };
 }
 
@@ -143,10 +154,11 @@ export function calcChangeFailureRate(
 }
 
 // --- Timeline ---
-// Uses releases if available, falls back to merged PRs for deployment events
+// Uses releases → PRs → commits as fallback for deployment events
 export function buildTimeline(
   releases: Release[],
   prs: PullRequest[],
+  commits: BranchCommit[],
   incidents: Issue[],
   days: number
 ): DeployEvent[] {
@@ -159,10 +171,12 @@ export function buildTimeline(
     map.set(d.toISOString().split('T')[0], { count: 0, hasIncident: false });
   }
 
-  // Use releases if available, otherwise PR merges
+  // Use releases → PRs → commits
   const deployEvents = releases.length > 0
     ? releases.map(r => r.published_at)
-    : prs.map(pr => pr.merged_at);
+    : prs.length > 0
+      ? prs.map(pr => pr.merged_at)
+      : commits.map(c => c.date);
 
   deployEvents.forEach(dateStr => {
     const key = dateStr.split('T')[0];

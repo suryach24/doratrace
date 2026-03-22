@@ -20,6 +20,7 @@ describe('GET /api/metrics', () => {
     mockMetrics.fetchMergedPRs.mockResolvedValue([]);
     mockMetrics.fetchIncidentIssues.mockResolvedValue([]);
     mockMetrics.fetchCommitsForPR.mockResolvedValue([]);
+    mockMetrics.fetchDefaultBranchCommits.mockResolvedValue([]);
   });
 
   it('returns 400 for missing repo', async () => {

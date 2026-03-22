@@ -4,6 +4,7 @@ import {
   fetchMergedPRs,
   fetchCommitsForPR,
   fetchIncidentIssues,
+  fetchDefaultBranchCommits,
 } from '../services/githubService';
 import {
   calcDeployFrequency,
@@ -37,17 +38,18 @@ router.get('/metrics', async (req: Request, res: Response) => {
   if (cached) return res.json({ ...cached, cached: true });
 
   try {
-    const [releases, prs, incidents] = await Promise.all([
+    const [releases, prs, incidents, branchCommits] = await Promise.all([
       fetchReleases(repo, days),
       fetchMergedPRs(repo, days),
       fetchIncidentIssues(repo, days),
+      fetchDefaultBranchCommits(repo, days),
     ]);
 
-    const deployFrequency = calcDeployFrequency(releases, prs, days);
+    const deployFrequency = calcDeployFrequency(releases, prs, branchCommits, days);
     const leadTime = await calcLeadTime(prs, prNum => fetchCommitsForPR(repo, prNum));
     const mttr = calcMTTR(incidents);
     const changeFailureRate = calcChangeFailureRate(incidents, releases, prs);
-    const timeline = buildTimeline(releases, prs, incidents, days);
+    const timeline = buildTimeline(releases, prs, branchCommits, incidents, days);
 
     const result: DoraMetrics = {
       repo,
