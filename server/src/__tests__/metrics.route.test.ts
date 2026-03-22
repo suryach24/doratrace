@@ -21,29 +21,30 @@ describe('GET /api/metrics', () => {
     mockMetrics.fetchIncidentIssues.mockResolvedValue([]);
     mockMetrics.fetchCommitsForPR.mockResolvedValue([]);
     mockMetrics.fetchDefaultBranchCommits.mockResolvedValue([]);
+    mockMetrics.fetchAllClosedIssues.mockResolvedValue([]);
   });
 
   it('returns 400 for missing repo', async () => {
     const res = await request(app).get('/api/metrics?days=90');
     expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/Invalid repo format/);
+    expect(res.body.error).toMatch(/repo|URL/i);
   });
 
   it('returns 400 for malformed repo', async () => {
-    const res = await request(app).get('/api/metrics?repo=notarepo&days=90');
+    const res = await request(app).get('/api/metrics?repo=https://notarepo.com&days=90');
     expect(res.status).toBe(400);
   });
 
   it('returns 400 for invalid days value', async () => {
-    const res = await request(app).get('/api/metrics?repo=owner/repo&days=45');
+    const res = await request(app).get('/api/metrics?repo=https://github.com/owner/repo&days=45');
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/days must be/);
   });
 
   it('returns 200 with valid repo and days', async () => {
-    const res = await request(app).get('/api/metrics?repo=owner/repo&days=90');
+    const res = await request(app).get('/api/metrics?repo=https://github.com/owner/repo&days=90');
     expect(res.status).toBe(200);
-    expect(res.body.repo).toBe('owner/repo');
+    expect(res.body.repo).toBe("owner/repo");
     expect(res.body.days).toBe(90);
     expect(res.body).toHaveProperty('deployFrequency');
     expect(res.body).toHaveProperty('leadTime');
@@ -54,8 +55,8 @@ describe('GET /api/metrics', () => {
   });
 
   it('returns cached: true on second identical request', async () => {
-    await request(app).get('/api/metrics?repo=owner/repo&days=90');
-    const res = await request(app).get('/api/metrics?repo=owner/repo&days=90');
+    await request(app).get('/api/metrics?repo=https://github.com/owner/repo&days=90');
+    const res = await request(app).get('/api/metrics?repo=https://github.com/owner/repo&days=90');
     expect(res.status).toBe(200);
     expect(res.body.cached).toBe(true);
     expect(mockMetrics.fetchReleases).toHaveBeenCalledTimes(1);
@@ -65,12 +66,12 @@ describe('GET /api/metrics', () => {
     const err: any = new Error('Not found');
     err.status = 404;
     mockMetrics.fetchReleases.mockRejectedValue(err);
-    const res = await request(app).get('/api/metrics?repo=owner/nonexistent&days=90');
+    const res = await request(app).get('/api/metrics?repo=https://github.com/owner/nonexistent&days=90');
     expect(res.status).toBe(404);
   });
 
   it('defaults days to 90 when omitted', async () => {
-    const res = await request(app).get('/api/metrics?repo=owner/repo');
+    const res = await request(app).get('/api/metrics?repo=https://github.com/owner/repo');
     expect(res.status).toBe(200);
     expect(res.body.days).toBe(90);
   });

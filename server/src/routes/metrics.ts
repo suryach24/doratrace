@@ -5,6 +5,7 @@ import {
   fetchCommitsForPR,
   fetchIncidentIssues,
   fetchDefaultBranchCommits,
+  fetchAllClosedIssues,
 } from '../services/githubService';
 import {
   fetchAdoCommits,
@@ -62,9 +63,15 @@ router.get('/metrics', async (req: Request, res: Response) => {
         fetchDefaultBranchCommits(ghRepo, days),
       ]);
 
+      // MTTR fallback: if no labeled/keyword incidents found, use all closed issues
+      let mttrSource = incidents;
+      if (incidents.length === 0) {
+        mttrSource = await fetchAllClosedIssues(ghRepo, days);
+      }
+
       deployFrequency = calcDeployFrequency(releases, prs, branchCommits, days);
       leadTime = await calcLeadTime(prs, prNum => fetchCommitsForPR(ghRepo, prNum));
-      mttr = calcMTTR(incidents);
+      mttr = calcMTTR(mttrSource);
       changeFailureRate = calcChangeFailureRate(incidents, releases, prs);
       timeline = buildTimeline(releases, prs, branchCommits, incidents, days);
 

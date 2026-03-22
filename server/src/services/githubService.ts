@@ -65,14 +65,46 @@ export async function fetchMergedPRs(repo: string, days: number): Promise<PullRe
   const data: any[] = await githubFetch(
     `${BASE_URL}/repos/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=100`
   );
-  return data
+  const inWindow = data
     .filter(pr => pr.merged_at && pr.merged_at >= since)
-    .slice(0, 50)
-    .map(pr => ({
-      number: pr.number,
-      merged_at: pr.merged_at,
-      title: pr.title,
-      head: { ref: pr.head.ref },
+    .slice(0, 50);
+
+  // If no PRs in the selected window, fall back to all-time recent PRs for lead time calculation
+  if (inWindow.length === 0) {
+    return data
+      .filter(pr => pr.merged_at)
+      .slice(0, 20)
+      .map(pr => ({
+        number: pr.number,
+        merged_at: pr.merged_at,
+        title: pr.title,
+        head: { ref: pr.head.ref },
+      }));
+  }
+
+  return inWindow.map(pr => ({
+    number: pr.number,
+    merged_at: pr.merged_at,
+    title: pr.title,
+    head: { ref: pr.head.ref },
+  }));
+}
+
+// Fetch ALL closed issues (no label filter) — used as MTTR fallback
+export async function fetchAllClosedIssues(repo: string, days: number): Promise<Issue[]> {
+  const since = sinceISO(days);
+  const data: any[] = await githubFetch(
+    `${BASE_URL}/repos/${repo}/issues?state=closed&since=${since}&per_page=100`
+  );
+  // Exclude pull requests from the issues endpoint
+  return data
+    .filter(item => !item.pull_request && item.closed_at)
+    .map(item => ({
+      number: item.number,
+      created_at: item.created_at,
+      closed_at: item.closed_at,
+      title: item.title,
+      labels: item.labels,
     }));
 }
 
