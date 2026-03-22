@@ -17,9 +17,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install root deps
-        run: npm install
-
       - name: Install & build client
         run: cd client && npm install && npm run build
 
@@ -31,23 +28,28 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 65002 -H ${{ secrets.FTP_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Deploy via rsync
         run: |
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 65002" \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='client/src' \
             --exclude='server/src' \
+            --exclude='.env' \
             ./ \
-            ${{ secrets.FTP_USERNAME }}@${{ secrets.FTP_HOST }}:public_html/doratrace/
+            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/var/www/doratrace/
 
-      - name: Install production deps + restart Node app
+      - name: Install deps + start/restart app with PM2
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 65002 \
-            ${{ secrets.FTP_USERNAME }}@${{ secrets.FTP_HOST }} << 'ENDSSH'
-          cd ~/public_html/doratrace/server && npm install --production
-          mkdir -p tmp && touch tmp/restart.txt
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+          cd /var/www/doratrace/server
+          npm install --omit=dev
+          pm2 describe doratrace > /dev/null 2>&1 \
+            && pm2 restart doratrace \
+            || pm2 start dist/index.js --name doratrace
+          pm2 save
           ENDSSH
