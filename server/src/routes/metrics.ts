@@ -43,11 +43,11 @@ router.get('/metrics', async (req: Request, res: Response) => {
       fetchIncidentIssues(repo, days),
     ]);
 
-    const deployFrequency = calcDeployFrequency(releases, days);
+    const deployFrequency = calcDeployFrequency(releases, prs, days);
     const leadTime = await calcLeadTime(prs, prNum => fetchCommitsForPR(repo, prNum));
     const mttr = calcMTTR(incidents);
     const changeFailureRate = calcChangeFailureRate(incidents, releases, prs);
-    const timeline = buildTimeline(releases, incidents, days);
+    const timeline = buildTimeline(releases, prs, incidents, days);
 
     const result: DoraMetrics = {
       repo,

@@ -47,23 +47,30 @@ const makeIssue = (createdDaysAgo: number, closedDaysAgo: number | null): Issue 
 
 // --- Deploy Frequency ---
 describe('calcDeployFrequency', () => {
-  it('returns low tier with 0 dataPoints for empty releases', () => {
-    const result = calcDeployFrequency([], 90);
+  it('returns low tier with 0 dataPoints for empty releases and PRs', () => {
+    const result = calcDeployFrequency([], [], 90);
     expect(result.tier).toBe('low');
     expect(result.dataPoints).toBe(0);
   });
 
-  it('calculates elite for >1 deploy/day', () => {
+  it('calculates elite for >1 deploy/day via releases', () => {
     const releases = Array.from({ length: 100 }, (_, i) => makeRelease(i));
-    const result = calcDeployFrequency(releases, 90);
+    const result = calcDeployFrequency(releases, [], 90);
     expect(result.tier).toBe('elite');
     expect(result.value).toBeGreaterThan(7);
   });
 
-  it('calculates correct deploys/week', () => {
+  it('calculates correct releases/week', () => {
     const releases = Array.from({ length: 9 }, (_, i) => makeRelease(i * 10));
-    const result = calcDeployFrequency(releases, 90);
-    expect(result.unit).toBe('deploys/week');
+    const result = calcDeployFrequency(releases, [], 90);
+    expect(result.unit).toBe('releases/week');
+    expect(result.tier).toBe('medium');
+  });
+
+  it('falls back to PRs when no releases', () => {
+    const prs = Array.from({ length: 9 }, (_, i) => makePR(i * 10));
+    const result = calcDeployFrequency([], prs, 90);
+    expect(result.unit).toBe('PRs/week');
     expect(result.tier).toBe('medium');
   });
 });
@@ -141,13 +148,21 @@ describe('calcChangeFailureRate', () => {
 // --- Timeline ---
 describe('buildTimeline', () => {
   it('returns one entry per day', () => {
-    const result = buildTimeline([], [], 30);
+    const result = buildTimeline([], [], [], 30);
     expect(result).toHaveLength(30);
   });
 
   it('counts releases on the correct day', () => {
     const releases = [makeRelease(0)];
-    const result = buildTimeline(releases, [], 7);
+    const result = buildTimeline(releases, [], [], 7);
+    const today = new Date().toISOString().split('T')[0];
+    const todayEntry = result.find(e => e.date === today);
+    expect(todayEntry?.count).toBe(1);
+  });
+
+  it('uses PR merges when no releases', () => {
+    const prs = [makePR(0)];
+    const result = buildTimeline([], prs, [], 7);
     const today = new Date().toISOString().split('T')[0];
     const todayEntry = result.find(e => e.date === today);
     expect(todayEntry?.count).toBe(1);
@@ -155,7 +170,7 @@ describe('buildTimeline', () => {
 
   it('marks incident days', () => {
     const incidents = [makeIssue(1, 0)];
-    const result = buildTimeline([], incidents, 7);
+    const result = buildTimeline([], [], incidents, 7);
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const entry = result.find(e => e.date === yesterday);
     expect(entry?.hasIncident).toBe(true);

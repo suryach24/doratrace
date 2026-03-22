@@ -31,19 +31,37 @@ function tierFailRate(pct: number): PerformanceTier {
   return 'low';
 }
 
-export function calcDeployFrequency(releases: Release[], days: number): MetricResult {
-  if (releases.length === 0) {
+// --- Deploy Frequency ---
+// Uses Releases when available; falls back to merged PRs (most repos don't publish formal releases)
+export function calcDeployFrequency(
+  releases: Release[],
+  prs: PullRequest[],
+  days: number
+): MetricResult {
+  if (releases.length > 0) {
+    const perWeek = (releases.length / days) * 7;
+    return {
+      value: Math.round(perWeek * 10) / 10,
+      unit: 'releases/week',
+      tier: tierDeployFreq(perWeek),
+      dataPoints: releases.length,
+    };
+  }
+
+  // Fallback: merged PRs as deployment proxy
+  if (prs.length === 0) {
     return { value: 0, unit: 'deploys/week', tier: 'low', dataPoints: 0 };
   }
-  const perWeek = (releases.length / days) * 7;
+  const perWeek = (prs.length / days) * 7;
   return {
     value: Math.round(perWeek * 10) / 10,
-    unit: 'deploys/week',
+    unit: 'PRs/week',   // label makes it clear this is a proxy
     tier: tierDeployFreq(perWeek),
-    dataPoints: releases.length,
+    dataPoints: prs.length,
   };
 }
 
+// --- Lead Time ---
 export async function calcLeadTime(
   prs: PullRequest[],
   fetchCommits: CommitFetcher
@@ -83,6 +101,8 @@ export async function calcLeadTime(
   };
 }
 
+// --- MTTR ---
+// Includes: labeled issues (incident/bug/hotfix/outage) + issues with fix keywords in title
 export function calcMTTR(incidents: Issue[]): MetricResult {
   const resolved = incidents.filter(i => i.closed_at !== null);
   if (resolved.length === 0) {
@@ -101,11 +121,14 @@ export function calcMTTR(incidents: Issue[]): MetricResult {
   };
 }
 
+// --- Change Failure Rate ---
+// Uses incidents (labeled issues + fix/revert PRs) as failures, merged PRs as total deployments
 export function calcChangeFailureRate(
   incidents: Issue[],
   releases: Release[],
   prs: PullRequest[]
 ): MetricResult {
+  // Total deployments = releases if available, else merged PRs
   const total = releases.length || prs.length;
   if (total === 0) {
     return { value: 0, unit: '%', tier: 'na', dataPoints: 0 };
@@ -119,8 +142,11 @@ export function calcChangeFailureRate(
   };
 }
 
+// --- Timeline ---
+// Uses releases if available, falls back to merged PRs for deployment events
 export function buildTimeline(
   releases: Release[],
+  prs: PullRequest[],
   incidents: Issue[],
   days: number
 ): DeployEvent[] {
@@ -133,8 +159,13 @@ export function buildTimeline(
     map.set(d.toISOString().split('T')[0], { count: 0, hasIncident: false });
   }
 
-  releases.forEach(r => {
-    const key = r.published_at.split('T')[0];
+  // Use releases if available, otherwise PR merges
+  const deployEvents = releases.length > 0
+    ? releases.map(r => r.published_at)
+    : prs.map(pr => pr.merged_at);
+
+  deployEvents.forEach(dateStr => {
+    const key = dateStr.split('T')[0];
     const entry = map.get(key);
     if (entry) entry.count++;
   });

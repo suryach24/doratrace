@@ -90,9 +90,13 @@ export async function fetchIncidentIssues(repo: string, days: number): Promise<I
   );
   return data.filter(item => {
     if (item.pull_request) {
-      return /revert|hotfix|rollback/i.test(item.title);
+      // Catch revert PRs, hotfixes, rollbacks, and fix PRs
+      return /revert|hotfix|rollback|fix:|bugfix|bug fix/i.test(item.title);
     }
+    // Catch labeled issues
     const labelNames = item.labels.map((l: any) => l.name.toLowerCase());
-    return INCIDENT_LABELS.some(il => labelNames.includes(il));
+    if (INCIDENT_LABELS.some(il => labelNames.includes(il))) return true;
+    // Also catch issues with incident/bug keywords in title (for repos without consistent labels)
+    return /\bbug\b|\bincident\b|\bfailure\b|\bbroken\b|\bcrash\b|\bregression\b/i.test(item.title);
   });
 }
