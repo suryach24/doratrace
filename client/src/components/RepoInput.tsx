@@ -51,15 +51,19 @@ export function RepoInput({ onSubmit, isLoading }: Props) {
         Paste a full GitHub or Azure DevOps repo URL to calculate DORA metrics.
       </p>
 
+      {provider && (
+        <div className="provider-indicator">
+          <span className={`provider-badge ${provider}`}>
+            {provider === 'github' ? '⬡ GitHub' : '◈ Azure DevOps'}
+          </span>
+          <span className="provider-detected">detected</span>
+        </div>
+      )}
+
       <form className="repo-input-form" onSubmit={handleSubmit}>
         <div className="repo-input-field-wrap">
-          {provider && (
-            <span className={`provider-badge ${provider}`}>
-              {provider === 'github' ? 'GitHub' : 'Azure DevOps'}
-            </span>
-          )}
           <input
-            className={`repo-input-field${provider ? ' has-badge' : ''}`}
+            className="repo-input-field"
             type="text"
             placeholder="https://github.com/owner/repo"
             value={url}
