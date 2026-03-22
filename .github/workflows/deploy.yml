@@ -50,6 +50,6 @@ jobs:
           npm install --omit=dev
           pm2 describe doratrace > /dev/null 2>&1 \
             && pm2 restart doratrace \
-            || pm2 start dist/index.js --name doratrace
+            || pm2 start ecosystem.config.js
           pm2 save
           ENDSSH
